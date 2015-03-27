@@ -60,6 +60,7 @@ public class Person {
 ```
 
 This can be used like:
+
 ```java
 Person friend = new PersonBuilder()
     .addToAddressLines("1123 Easy Street")
