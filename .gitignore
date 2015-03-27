@@ -1,0 +1,7 @@
+# These paths come from the base_workspace directory in a built Bazel
+# repository.
+/tools
+/third_party
+
+# Bazel output directory.
+/bazel-*
