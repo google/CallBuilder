@@ -23,7 +23,7 @@ public class Person {
   @CallBuilder
   Person(
       String familyName,
-      String firstName,
+      String givenName,
       ImmutableList<String> addressLines,
       Optional<Integer> age) {
     // ...
@@ -37,8 +37,8 @@ Now you will have access to a `PersonBuilder` class in the same package!
 Person friend = new PersonBuilder()
     .setAddressLines(ImmutableList.of("1123 Easy Street", "Townplace, XZ"))
     .setAge(Optional.of(22))
-    .setFirstName("John")
-    .setLastName("Doe")
+    .setGivenName("John")
+    .setFamilyName("Doe")
     .build();
 ```
 
@@ -51,7 +51,7 @@ public class Person {
   @CallBuilder
   Person(
       String familyName,
-      String firstName,
+      String givenName,
       @BuilderField(style = ImmutableListAdding.class) ImmutableList<String> addressLines,
       @BuilderField(style = OptionalSetting.class) Optional<Integer> age) {
     // ...
@@ -66,8 +66,8 @@ Person friend = new PersonBuilder()
     .addToAddressLines("1123 Easy Street")
     .addToAddressLines("Townplace, XZ")
     .setAge(22)
-    .setFirstName("John")
-    .setLastName("Doe")
+    .setGivenName("John")
+    .setFamilyName("Doe")
     .build();
 ```
 
