@@ -15,22 +15,12 @@
 package(default_testonly = 1)
 
 java_test(
-    name = "CallBuilderTest",
-    srcs = ["CallBuilderTest.java"],
+    name = "ValueTypeTest",
+    srcs = ["ValueTypeTest.java"],
     deps = [
-        "//java/com/google/callbuilder",
+        "//java/com/google/callbuilder/util",
         "//third_party:guava",
-        "//third_party:junit4",
-        "//third_party:truth",
-    ],
-)
-
-java_test(
-    name = "UnificationTest",
-    srcs = ["UnificationTest.java"],
-    deps = [
-        "//java/com/google/callbuilder",
-        "//third_party:guava",
+        "//third_party:guava-testlib",
         "//third_party:junit4",
         "//third_party:truth",
     ],

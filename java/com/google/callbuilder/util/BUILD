@@ -12,26 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package(default_testonly = 1)
-
-java_test(
-    name = "CallBuilderTest",
-    srcs = ["CallBuilderTest.java"],
-    deps = [
-        "//java/com/google/callbuilder",
-        "//third_party:guava",
-        "//third_party:junit4",
-        "//third_party:truth",
-    ],
-)
-
-java_test(
-    name = "UnificationTest",
-    srcs = ["UnificationTest.java"],
-    deps = [
-        "//java/com/google/callbuilder",
-        "//third_party:guava",
-        "//third_party:junit4",
-        "//third_party:truth",
-    ],
+java_library(
+    name = "util",
+    srcs = ["ValueType.java"],
+    visibility = ["//visibility:public"],
 )

@@ -13,8 +13,9 @@
  */
 package com.google.callbuilder;
 
-import com.google.auto.value.AutoValue;
+import com.google.callbuilder.util.ValueType;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Map;
@@ -26,14 +27,31 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 
-@AutoValue
-abstract class FieldInfo {
+final class FieldInfo extends ValueType {
+  private final VariableElement parameter;
+  private final Optional<FieldStyle> style;
+
+  FieldInfo(VariableElement parameter, Optional<FieldStyle> style) {
+    this.parameter = Preconditions.checkNotNull(parameter);
+    this.style = Preconditions.checkNotNull(style);
+  }
+
+  @Override
+  protected void addFields(FieldReceiver fields) {
+    fields.add("parameter", parameter);
+    fields.add("style", style);
+  }
+
   /**
    * Method parameter from which this field was automatically generated.
    */
-  abstract VariableElement parameter();
+  VariableElement parameter() {
+    return parameter;
+  }
 
-  abstract Optional<FieldStyle> style();
+  Optional<FieldStyle> style() {
+    return style;
+  }
 
   /**
    * The name of this field, which is used in the builder method names. This is the name of the
@@ -68,7 +86,7 @@ abstract class FieldInfo {
       }
     }
 
-    return new AutoValue_FieldInfo(parameter, style);
+    return new FieldInfo(parameter, style);
   }
 
   static ImmutableList<FieldInfo> fromAll(

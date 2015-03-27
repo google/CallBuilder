@@ -13,24 +13,55 @@
  */
 package com.google.callbuilder;
 
-import com.google.auto.value.AutoValue;
+import com.google.callbuilder.util.ValueType;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.ElementFilter;
 
-@AutoValue
-abstract class FieldStyle {
+final class FieldStyle extends ValueType {
+  private final DeclaredType styleClass;
+  private final ImmutableList<ExecutableElement> modifiers;
+  private final ExecutableElement start;
+  private final ExecutableElement finish;
+
+  FieldStyle(DeclaredType styleClass, ImmutableList<ExecutableElement> modifiers,
+      ExecutableElement start, ExecutableElement finish) {
+    this.styleClass = Preconditions.checkNotNull(styleClass);
+    this.modifiers = Preconditions.checkNotNull(modifiers);
+    this.start = Preconditions.checkNotNull(start);
+    this.finish = Preconditions.checkNotNull(finish);
+  }
+
+  @Override
+  protected void addFields(FieldReceiver fields) {
+    fields.add("styleClass", styleClass);
+    fields.add("modifiers", modifiers);
+    fields.add("start", start);
+    fields.add("finish", finish);
+  }
+
   /**
    * The type corresponding to the field's style, which may be customized with the
    * @{@link BuilderField} annotation.
    */
-  abstract DeclaredType styleClass();
+  DeclaredType styleClass() {
+    return styleClass;
+  }
 
-  abstract ImmutableList<ExecutableElement> modifiers();
-  abstract ExecutableElement start();
-  abstract ExecutableElement finish();
+  ImmutableList<ExecutableElement> modifiers() {
+    return modifiers;
+  }
+
+  ExecutableElement start() {
+    return start;
+  }
+
+  ExecutableElement finish() {
+    return finish;
+  }
 
   public static FieldStyle fromStyleClass(DeclaredType styleClass) {
     ImmutableList.Builder<ExecutableElement> modifiers = new ImmutableList.Builder<>();
@@ -55,6 +86,6 @@ abstract class FieldStyle {
           styleClass));
     }
 
-    return new AutoValue_FieldStyle(styleClass, modifiers.build(), start, finish);
+    return new FieldStyle(styleClass, modifiers.build(), start, finish);
   }
 }

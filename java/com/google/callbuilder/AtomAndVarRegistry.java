@@ -75,7 +75,7 @@ final class AtomAndVarRegistry {
         for (TypeMirror typeArgument : declaredType.getTypeArguments()) {
           types.add(encode(typeArgument, overridenTypeVariables));
         }
-        return new AutoValue_Unification_Sequence(types.build());
+        return new Sequence(types.build());
       case ARRAY:
       case BOOLEAN:
       case BYTE:

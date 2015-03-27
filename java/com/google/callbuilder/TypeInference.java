@@ -14,6 +14,7 @@
 package com.google.callbuilder;
 
 import com.google.callbuilder.Unification.Result;
+import com.google.callbuilder.Unification.Sequence;
 import com.google.callbuilder.Unification.Unifiable;
 import com.google.callbuilder.Unification.Variable;
 import com.google.common.base.Optional;
@@ -87,9 +88,7 @@ final class TypeInference {
         finishOverridenTypeVariables));
     rhs.add(registry.encode(parameter.asType(), ImmutableMap.<String, Variable>of()));
 
-    Optional<Result> result = Unification.unify(
-        new AutoValue_Unification_Sequence(lhs.build()),
-        new AutoValue_Unification_Sequence(rhs.build()));
+    Optional<Result> result = Unification.unify(new Sequence(lhs.build()), new Sequence(rhs.build()));
     if (result.isPresent()) {
       return Optional.of(new TypeInference(registry, result.get().resolve(builderFieldType)));
     } else {

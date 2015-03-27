@@ -15,7 +15,7 @@ package com.google.callbuilder;
 
 import static javax.lang.model.element.Modifier.STATIC;
 
-import com.google.auto.value.AutoValue;
+import com.google.callbuilder.util.ValueType;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -332,7 +332,7 @@ public class CallBuilderProcessor extends AbstractProcessor {
 
   /**
    * Returns the name of the package that the given element is in. If the element is in the default
-   * (unnamed) package then the name is the empty string. Take from AutoValue source.
+   * (unnamed) package then the name is the empty string. Taken from AutoValue source code.
    */
   static String packageNameOf(Element el) {
     while (true) {

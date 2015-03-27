@@ -43,7 +43,7 @@ public class UnificationTest {
   }
 
   private Sequence seq(Unifiable... items) {
-    return new AutoValue_Unification_Sequence(ImmutableList.copyOf(items));
+    return new Sequence(ImmutableList.copyOf(items));
   }
 
   @Test

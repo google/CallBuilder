@@ -13,8 +13,9 @@
  */
 package com.google.callbuilder;
 
-import com.google.auto.value.AutoValue;
+import com.google.callbuilder.util.ValueType;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -44,9 +45,21 @@ final class Unification {
     }
   }
 
-  @AutoValue
-  static abstract class Sequence implements Unifiable {
-    abstract ImmutableList<Unifiable> items();
+  static final class Sequence extends ValueType implements Unifiable {
+    private final ImmutableList<Unifiable> items;
+
+    Sequence(ImmutableList<Unifiable> items) {
+      this.items = Preconditions.checkNotNull(items);
+    }
+
+    ImmutableList<Unifiable> items() {
+      return items;
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("items", items);
+    }
 
     @Override
     public Unifiable apply(Map<Variable, Unifiable> substitutions) {
@@ -60,7 +73,7 @@ final class Unification {
     for (Unifiable oldItem : items) {
       newItems.add(oldItem.apply(substitutions));
     }
-    return new AutoValue_Unification_Sequence(newItems.build());
+    return new Sequence(newItems.build());
   }
 
   /**
@@ -100,7 +113,7 @@ final class Unification {
   }
 
   private static Optional<Result> success(ImmutableMap<Variable, Unifiable> mapping) {
-    return Optional.<Result>of(new AutoValue_Unification_Result(mapping));
+    return Optional.<Result>of(new Result(mapping));
   }
 
   static Optional<Result> unify(Unifiable lhs, Unifiable rhs) {
@@ -124,14 +137,26 @@ final class Unification {
    * that resulted from the algorithm, but also supplies functionality for resolving a variable to
    * the fullest extent possible with the {@code resolve} method.
    */
-  @AutoValue
-  abstract static class Result {
+  static final class Result extends ValueType {
+    private final ImmutableMap<Variable, Unifiable> rawResult;
+
+    Result(ImmutableMap<Variable, Unifiable> rawResult) {
+      this.rawResult = Preconditions.checkNotNull(rawResult);
+    }
+
     /**
      * The result of the unification algorithm proper. This does not have everything completely
      * resolved - some variable substitutions are required before getting the most atom-y
      * representation.
      */
-    abstract ImmutableMap<Variable, Unifiable> rawResult();
+    ImmutableMap<Variable, Unifiable> rawResult() {
+      return rawResult;
+    }
+
+    @Override
+    protected void addFields(FieldReceiver fields) {
+      fields.add("rawResult", rawResult);
+    }
 
     final Unifiable resolve(Unifiable unifiable) {
       Unifiable previous;
