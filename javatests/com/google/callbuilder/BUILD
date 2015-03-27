@@ -25,11 +25,23 @@ java_test(
     ],
 )
 
+# Makes sure that we can use functionality given in the style library.
+java_test(
+    name = "WithStyleTest",
+    srcs = ["WithStyleTest.java"],
+    deps = [
+        "//java/com/google/callbuilder",
+        "//java/com/google/callbuilder/style",
+        "//third_party:guava",
+        "//third_party:junit4",
+    ],
+)
+
 java_test(
     name = "UnificationTest",
     srcs = ["UnificationTest.java"],
     deps = [
-        "//java/com/google/callbuilder",
+        "//java/com/google/callbuilder:processor_lib",
         "//third_party:guava",
         "//third_party:junit4",
         "//third_party:truth",

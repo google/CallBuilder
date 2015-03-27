@@ -12,29 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ANNOTATIONS = ["BuilderField.java", "CallBuilder.java"]
+
 java_library(
-    name = "callbuilder_lib",
-    srcs = glob([
-        "*.java",
-        "style/*.java",
-    ]),
+    name = "processor_lib",
+    srcs = glob(["*.java"], exclude = ANNOTATIONS),
     deps = [
+        ":annotations",
         "//java/com/google/callbuilder/util",
         "//third_party:guava",
     ],
+    visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "annotations",
+    srcs = ANNOTATIONS,
 )
 
 java_library(
     name = "callbuilder",
     exported_plugins = [":callbuilder_plugin"],
+    exports = [":annotations"],
     visibility = ["//visibility:public"],
-    exports = [":callbuilder_lib"],
 )
 
 java_plugin(
     name = "callbuilder_plugin",
     processor_class = "com.google.callbuilder.CallBuilderProcessor",
     deps = [
-        ":callbuilder_lib",
+        ":processor_lib",
     ],
 )

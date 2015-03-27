@@ -15,10 +15,6 @@ package com.google.callbuilder;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.callbuilder.CallBuilder;
-import com.google.callbuilder.style.ImmutableListAdding;
-import com.google.callbuilder.style.OptionalSetting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -107,32 +103,6 @@ public class CallBuilderTest {
     Name(String family, String given) {
       this.family = Preconditions.checkNotNull(family);
       this.given = Preconditions.checkNotNull(given);
-    }
-  }
-
-  static class TwoImmutableLists {
-    ImmutableList<String> first;
-    ImmutableList<Integer> second;
-
-    @CallBuilder
-    TwoImmutableLists(
-        @BuilderField(style = ImmutableListAdding.class) ImmutableList<String> first,
-        @BuilderField(style = ImmutableListAdding.class) ImmutableList<Integer> second) {
-      this.first = first;
-      this.second = second;
-    }
-  }
-
-  static class HasOptionals {
-    Optional<Integer> age;
-    Optional<Integer> income;
-
-    @CallBuilder
-    HasOptionals(
-        @BuilderField(style = OptionalSetting.class) Optional<Integer> age,
-        @BuilderField(style = OptionalSetting.class) Optional<Integer> income) {
-      this.age = age;
-      this.income = income;
     }
   }
 
@@ -240,43 +210,5 @@ public class CallBuilderTest {
     Name n = new NameBuilder().setGiven("Eric").setFamily("Schmidt").build();
     Assert.assertEquals("Eric", n.given);
     Assert.assertEquals("Schmidt", n.family);
-  }
-
-  @Test
-  public void testCustomFieldStyle() {
-    TwoImmutableLists lists = new TwoImmutableListsBuilder()
-        .addToFirst("one")
-        .addToSecond(1)
-        .addToFirst("DOS")
-        .addToSecond(2)
-        .addAllToFirst(ImmutableList.of("san", "ourfay", "FIVE"))
-        .addAllToSecond(ImmutableList.of(3, 4, 5))
-        .build();
-    Assert.assertEquals(
-        ImmutableList.of("one", "DOS", "san", "ourfay", "FIVE"),
-        lists.first);
-    Assert.assertEquals(
-        ImmutableList.of(1, 2, 3, 4, 5),
-        lists.second);
-  }
-
-  @Test
-  public void optionalSettingFieldStyle() {
-    HasOptionals bothEmpty = new HasOptionalsBuilder()
-        .build();
-    Assert.assertEquals(Optional.absent(), bothEmpty.age);
-    Assert.assertEquals(Optional.absent(), bothEmpty.income);
-
-    HasOptionals ageOnly = new HasOptionalsBuilder()
-        .setAge(14)
-        .build();
-    Assert.assertEquals(Optional.of(14), ageOnly.age);
-    Assert.assertEquals(Optional.absent(), ageOnly.income);
-
-    HasOptionals incomeOnly = new HasOptionalsBuilder()
-        .setIncome(1000)
-        .build();
-    Assert.assertEquals(Optional.absent(), incomeOnly.age);
-    Assert.assertEquals(Optional.of(1000), incomeOnly.income);
   }
 }
