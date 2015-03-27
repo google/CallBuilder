@@ -17,6 +17,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.callbuilder.CallBuilder;
 import com.google.callbuilder.style.ImmutableListAdding;
+import com.google.callbuilder.style.OptionalSetting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -118,6 +120,19 @@ public class CallBuilderTest {
         @BuilderField(style = ImmutableListAdding.class) ImmutableList<Integer> second) {
       this.first = first;
       this.second = second;
+    }
+  }
+
+  static class HasOptionals {
+    Optional<Integer> age;
+    Optional<Integer> income;
+
+    @CallBuilder
+    HasOptionals(
+        @BuilderField(style = OptionalSetting.class) Optional<Integer> age,
+        @BuilderField(style = OptionalSetting.class) Optional<Integer> income) {
+      this.age = age;
+      this.income = income;
     }
   }
 
@@ -243,5 +258,25 @@ public class CallBuilderTest {
     Assert.assertEquals(
         ImmutableList.of(1, 2, 3, 4, 5),
         lists.second);
+  }
+
+  @Test
+  public void optionalSettingFieldStyle() {
+    HasOptionals bothEmpty = new HasOptionalsBuilder()
+        .build();
+    Assert.assertEquals(Optional.absent(), bothEmpty.age);
+    Assert.assertEquals(Optional.absent(), bothEmpty.income);
+
+    HasOptionals ageOnly = new HasOptionalsBuilder()
+        .setAge(14)
+        .build();
+    Assert.assertEquals(Optional.of(14), ageOnly.age);
+    Assert.assertEquals(Optional.absent(), ageOnly.income);
+
+    HasOptionals incomeOnly = new HasOptionalsBuilder()
+        .setIncome(1000)
+        .build();
+    Assert.assertEquals(Optional.absent(), incomeOnly.age);
+    Assert.assertEquals(Optional.of(1000), incomeOnly.income);
   }
 }
