@@ -13,8 +13,6 @@
  */
 package com.google.callbuilder;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -80,9 +79,14 @@ public class CallBuilderTest {
       return ImmutableList.<E>of(first, second, third);
     }
 
-    @CallBuilder(className = "LazyAppender", methodName = "append")
-    static <F> Iterable<F> lazyAppend(Iterable<F> allButLast, F last) {
-      return Iterables.concat(allButLast, ImmutableList.of(last));
+    @CallBuilder(className = "CopyAppender", methodName = "append")
+    static <F> List<F> copyAppend(Iterable<F> allButLast, F last) {
+      List<F> result = new ArrayList<>();
+      for (F element : allButLast) {
+        result.add(element);
+      }
+      result.add(last);
+      return result;
     }
   }
 
@@ -187,14 +191,12 @@ public class CallBuilderTest {
 
   @Test
   public void genericArgsOnMethodAndContainingClassButMethodIsStatic() {
-    Iterable<Integer> numbers = new LazyAppender<Integer>()
+    List<Integer> numbers = new CopyAppender<Integer>()
         .setAllButLast(ImmutableList.of(1, 2))
         .setLast(3)
         .append();
 
-    assertThat(numbers)
-        .containsExactly(1, 2, 3)
-        .inOrder();
+    Assert.assertEquals(Arrays.asList(1, 2, 3), numbers);
   }
 
   @Test

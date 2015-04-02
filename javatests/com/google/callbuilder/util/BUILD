@@ -22,6 +22,5 @@ java_test(
         "//third_party:guava",
         "//third_party:guava-testlib",
         "//third_party:junit4",
-        "//third_party:truth",
     ],
 )

@@ -21,7 +21,6 @@ java_test(
         "//java/com/google/callbuilder",
         "//third_party:guava",
         "//third_party:junit4",
-        "//third_party:truth",
     ],
 )
 
@@ -44,6 +43,5 @@ java_test(
         "//java/com/google/callbuilder:processor_lib",
         "//third_party:guava",
         "//third_party:junit4",
-        "//third_party:truth",
     ],
 )
