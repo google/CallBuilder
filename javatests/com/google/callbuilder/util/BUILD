@@ -20,7 +20,6 @@ java_test(
     deps = [
         "//java/com/google/callbuilder/util",
         "//third_party:guava",
-        "//third_party:guava-testlib",
         "//third_party:junit4",
     ],
 )

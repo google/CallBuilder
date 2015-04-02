@@ -16,12 +16,15 @@
 package com.google.callbuilder.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.common.testing.EqualsTester;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @RunWith(JUnit4.class)
 public class ValueTypeTest {
@@ -81,18 +84,45 @@ public class ValueTypeTest {
     assertEquals("Name{family=Doe, given=null}", new Name("Doe", null).toString());
   }
 
+  private void assertMutuallyEqual(List<Object> equalityGroup) {
+    for (int i = 1; i < equalityGroup.size(); i++) {
+      assertEquals(equalityGroup.get(0), equalityGroup.get(i));
+      assertEquals(equalityGroup.get(i), equalityGroup.get(0));
+      assertEquals(equalityGroup.get(0).hashCode(), equalityGroup.get(i).hashCode());
+      assertEquals(equalityGroup.get(0).toString(), equalityGroup.get(i).toString());
+    }
+  }
+
+  private void assertMutuallyUnequal(List<Object> items) {
+    for (int i = 0; i < items.size() - 1; i++) {
+      for (int j = i + 1; j < items.size(); j++) {
+        assertNotEquals(items.get(i), items.get(j));
+        assertNotEquals(items.get(j), items.get(i));
+      }
+    }
+  }
+
   @Test
   public void hashAndEquals() {
-    EqualsTester tester = new EqualsTester();
-    tester.addEqualityGroup(new Empty(), new Empty());
-    tester.addEqualityGroup(new Name("Foo", "Bar"), new Name("Foo", "Bar"));
-    tester.addEqualityGroup(new Name("Foo", "NotBar"));
-    tester.addEqualityGroup(new Name("NotFoo", "Bar"));
-    tester.addEqualityGroup(new Name("Foo", null), new Name("Foo", null));
-    tester.addEqualityGroup(new Name(null, "Bar"), new Name(null, "Bar"));
-    tester.addEqualityGroup(new PairThatOmitsNull(null, 42), new PairThatOmitsNull(null, 42));
-    tester.addEqualityGroup(new PairThatOmitsNull(42, null), new PairThatOmitsNull(42, null));
-    tester.addEqualityGroup(new PairThatOmitsNull(42, 42), new PairThatOmitsNull(42, 42));
-    tester.testEquals();
+    List<List<Object>> equalityGroups = new ArrayList<>();
+    equalityGroups.add(Arrays.asList(new Empty(), new Empty()));
+    equalityGroups.add(Arrays.asList(new Name("Foo", "Bar"), new Name("Foo", "Bar")));
+    equalityGroups.add(Arrays.asList(new Name("Foo", "NotBar")));
+    equalityGroups.add(Arrays.asList(new Name("NotFoo", "Bar")));
+    equalityGroups.add(Arrays.asList(new Name("Foo", null), new Name("Foo", null)));
+    equalityGroups.add(Arrays.asList(new Name(null, "Bar"), new Name(null, "Bar")));
+    equalityGroups.add(
+        Arrays.asList(new PairThatOmitsNull(null, 42), new PairThatOmitsNull(null, 42)));
+    equalityGroups.add(
+        Arrays.asList(new PairThatOmitsNull(42, null), new PairThatOmitsNull(42, null)));
+    equalityGroups.add(Arrays.asList(new PairThatOmitsNull(42, 42), new PairThatOmitsNull(42, 42)));
+
+    List<Object> distinctItems = new ArrayList<>();
+    for (List<Object> group : equalityGroups) {
+      assertMutuallyEqual(group);
+      distinctItems.add(group.get(0));
+    }
+
+    assertMutuallyUnequal(distinctItems);
   }
 }
