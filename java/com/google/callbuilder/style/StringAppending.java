@@ -13,20 +13,18 @@
  */
 package com.google.callbuilder.style;
 
-import com.google.common.base.Optional;
+public class StringAppending {
+  private StringAppending() {}
 
-public class OptionalSetting {
-  private OptionalSetting() {}
-
-  public static <E> Optional<E> start() {
-    return Optional.absent();
+  public static StringBuilder start() {
+    return new StringBuilder();
   }
 
-  public static <E> Optional<E> finish(Optional<E> from) {
-    return from;
+  public static String finish(StringBuilder from) {
+    return from.toString();
   }
 
-  public static <E> Optional<E> set(Optional<E> start, E value) {
-    return Optional.of(value);
+  public static StringBuilder appendTo(StringBuilder start, String value) {
+    return start.append(value);
   }
 }

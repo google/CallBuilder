@@ -17,6 +17,5 @@
 java_library(
     name = "style",
     srcs = glob(["*.java"]),
-    deps = ["//third_party:guava"],
     visibility = ["//visibility:public"],
 )

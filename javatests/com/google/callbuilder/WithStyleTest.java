@@ -13,79 +13,85 @@
  */
 package com.google.callbuilder;
 
-import com.google.callbuilder.style.ImmutableListAdding;
-import com.google.callbuilder.style.OptionalSetting;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.callbuilder.style.ArrayListAdding;
+import com.google.callbuilder.style.StringAppending;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 @RunWith(JUnit4.class)
 public class WithStyleTest {
-  static class TwoImmutableLists {
-    ImmutableList<String> first;
-    ImmutableList<Integer> second;
+  static class TwoArrayLists {
+    ArrayList<String> first;
+    ArrayList<Integer> second;
 
     @CallBuilder
-    TwoImmutableLists(
-        @BuilderField(style = ImmutableListAdding.class) ImmutableList<String> first,
-        @BuilderField(style = ImmutableListAdding.class) ImmutableList<Integer> second) {
+    TwoArrayLists(
+        @BuilderField(style = ArrayListAdding.class) ArrayList<String> first,
+        @BuilderField(style = ArrayListAdding.class) ArrayList<Integer> second) {
       this.first = first;
       this.second = second;
     }
   }
 
-  static class HasOptionals {
-    Optional<Integer> age;
-    Optional<Integer> income;
+  static class HasStrings {
+    String address;
+    String name;
 
     @CallBuilder
-    HasOptionals(
-        @BuilderField(style = OptionalSetting.class) Optional<Integer> age,
-        @BuilderField(style = OptionalSetting.class) Optional<Integer> income) {
-      this.age = age;
-      this.income = income;
+    HasStrings(
+        @BuilderField(style = StringAppending.class) String address,
+        @BuilderField(style = StringAppending.class) String name) {
+      this.address = address;
+      this.name = name;
     }
   }
 
   @Test
   public void immutableListAddingFieldStyle() {
-    TwoImmutableLists lists = new TwoImmutableListsBuilder()
+    TwoArrayLists lists = new TwoArrayListsBuilder()
         .addToFirst("one")
         .addToSecond(1)
         .addToFirst("DOS")
         .addToSecond(2)
-        .addAllToFirst(ImmutableList.of("san", "ourfay", "FIVE"))
-        .addAllToSecond(ImmutableList.of(3, 4, 5))
+        .addAllToFirst(Arrays.asList("san", "ourfay", "FIVE"))
+        .addAllToSecond(Arrays.asList(3, 4, 5))
         .build();
     Assert.assertEquals(
-        ImmutableList.of("one", "DOS", "san", "ourfay", "FIVE"),
+        Arrays.asList("one", "DOS", "san", "ourfay", "FIVE"),
         lists.first);
     Assert.assertEquals(
-        ImmutableList.of(1, 2, 3, 4, 5),
+        Arrays.asList(1, 2, 3, 4, 5),
         lists.second);
   }
 
   @Test
-  public void optionalSettingFieldStyle() {
-    HasOptionals bothEmpty = new HasOptionalsBuilder()
+  public void stringAppendingFieldStyle() {
+    HasStrings bothEmpty = new HasStringsBuilder()
         .build();
-    Assert.assertEquals(Optional.absent(), bothEmpty.age);
-    Assert.assertEquals(Optional.absent(), bothEmpty.income);
+    Assert.assertEquals("", bothEmpty.address);
+    Assert.assertEquals("", bothEmpty.name);
 
-    HasOptionals ageOnly = new HasOptionalsBuilder()
-        .setAge(14)
+    HasStrings addressOnly = new HasStringsBuilder()
+        .appendToAddress("1212 Easy St.\n")
+        .appendToAddress("Big Town, XY\n")
+        .appendToAddress("42042\n")
         .build();
-    Assert.assertEquals(Optional.of(14), ageOnly.age);
-    Assert.assertEquals(Optional.absent(), ageOnly.income);
+    Assert.assertEquals("1212 Easy St.\nBig Town, XY\n42042\n", addressOnly.address);
+    Assert.assertEquals("", addressOnly.name);
 
-    HasOptionals incomeOnly = new HasOptionalsBuilder()
-        .setIncome(1000)
+    HasStrings hasBoth = new HasStringsBuilder()
+        .appendToName("Doe, ")
+        .appendToAddress("1600 Amphitheatre Pkwy\n")
+        .appendToName("John")
+        .appendToAddress("Mountain View\n")
         .build();
-    Assert.assertEquals(Optional.absent(), incomeOnly.age);
-    Assert.assertEquals(Optional.of(1000), incomeOnly.income);
+    Assert.assertEquals("Doe, John", hasBoth.name);
+    Assert.assertEquals("1600 Amphitheatre Pkwy\nMountain View\n", hasBoth.address);
   }
 }
