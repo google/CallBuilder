@@ -1,0 +1,6 @@
+URL: https://github.com/junit-team/junit
+Version: ad9972ba5d135d1c5673f0773cb7027f7823feb5
+
+Notes:
+- Only includes the src/main/java subdirectory of the actual Git repository
+- Copied LICENSE-junit.txt here

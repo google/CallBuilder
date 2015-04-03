@@ -19,6 +19,6 @@ java_test(
     srcs = ["ValueTypeTest.java"],
     deps = [
         "//java/com/google/callbuilder/util",
-        "//third_party:junit4",
+        "//third_party/junit4",
     ],
 )

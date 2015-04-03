@@ -1,0 +1,7 @@
+URL: https://code.google.com/p/jsr-305/
+Version: r51
+
+Notes:
+- Only includes the ri/ subfolder from the original repo.
+- Removed empty build/ folder so BUILD file could be created on case-insensitive
+  file systems.
