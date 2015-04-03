@@ -16,14 +16,13 @@ package com.google.callbuilder;
 import static javax.lang.model.element.Modifier.STATIC;
 
 import com.google.callbuilder.util.Preconditions;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +35,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -45,11 +45,10 @@ import javax.tools.JavaFileObject;
 
 public class CallBuilderProcessor extends AbstractProcessor {
   @Override
-  public ImmutableSet<String> getSupportedAnnotationTypes() {
-    ImmutableSet.Builder<String> types = new ImmutableSet.Builder<>();
+  public Set<String> getSupportedAnnotationTypes() {
+    Set<String> types = new HashSet<>();
     types.add(CallBuilder.class.getName());
-    // types.add(BuilderField.class.getName());
-    return types.build();
+    return types;
   }
 
   @Override
@@ -74,12 +73,12 @@ public class CallBuilderProcessor extends AbstractProcessor {
     return s.substring(0, 1).toUpperCase() + s.substring(1);
   }
 
-  ImmutableList<String> simpleNames(Iterable<? extends Element> elements) {
-    ImmutableList.Builder<String> names = new ImmutableList.Builder<>();
+  List<String> simpleNames(Iterable<? extends Element> elements) {
+    List<String> names = new ArrayList<>();
     for (Element el : elements) {
       names.add(el.getSimpleName().toString());
     }
-    return names.build();
+    return names;
   }
 
   private static String lines(String... separated) {
@@ -95,12 +94,13 @@ public class CallBuilderProcessor extends AbstractProcessor {
     writer.write(String.format(format, (Object[]) args));
   }
 
-  private Iterable<ExecutableElement> callbuilderElements(RoundEnvironment roundEnv) {
+  private List<ExecutableElement> callbuilderElements(RoundEnvironment roundEnv) {
     Collection<? extends Element> unfiltered =
         roundEnv.getElementsAnnotatedWith(CallBuilder.class);
-    return Iterables.concat(
-        ElementFilter.constructorsIn(unfiltered),
-        ElementFilter.methodsIn(unfiltered));
+    List<ExecutableElement> elements = new ArrayList<>();
+    elements.addAll(ElementFilter.constructorsIn(unfiltered));
+    elements.addAll(ElementFilter.methodsIn(unfiltered));
+    return elements;
   }
 
   /**
@@ -127,39 +127,55 @@ public class CallBuilderProcessor extends AbstractProcessor {
     }
   }
 
+  private static StringBuilder joinOn(
+      StringBuilder builder, String delimiter, Iterable<?> elements) {
+    int added = 0;
+    for (Object element : elements) {
+      if (added++ > 0) {
+        builder.append(delimiter);
+      }
+
+      builder.append(element.toString());
+    }
+
+    return builder;
+  }
+
   private static final class TypeParameters {
-    private final ImmutableList<TypeParameterElement> classParameters;
-    private final ImmutableList<TypeParameterElement> methodParameters;
+    private final List<TypeParameterElement> classParameters;
+    private final List<TypeParameterElement> methodParameters;
     private final @Nullable Context context;
     private final boolean isConstructor;
 
-    TypeParameters(Iterable<? extends TypeParameterElement> classParameters,
-        Iterable<? extends TypeParameterElement> methodParameters,
+    TypeParameters(List<? extends TypeParameterElement> classParameters,
+        List<? extends TypeParameterElement> methodParameters,
         @Nullable Context context,
         boolean isConstructor) {
-      this.classParameters = ImmutableList.copyOf(classParameters);
-      this.methodParameters = ImmutableList.copyOf(methodParameters);
+      this.classParameters = Collections.unmodifiableList(new ArrayList<>(classParameters));
+      this.methodParameters = Collections.unmodifiableList(new ArrayList<>(methodParameters));
       this.context = context;
       this.isConstructor = isConstructor;
     }
 
-    private Iterable<TypeParameterElement> allParameters() {
+    private List<TypeParameterElement> allParameters() {
+      List<TypeParameterElement> allParameters = new ArrayList<>();
       if ((context != null) || isConstructor) {
-        return Iterables.concat(classParameters, methodParameters);
-      } else {
-        return methodParameters;
+        allParameters.addAll(classParameters);
       }
+      allParameters.addAll(methodParameters);
+      return allParameters;
     }
 
     /**
      * The type parameters to place on the builder, without the "extends ..." bounds.
      */
     String alligator() {
-      if (Iterables.isEmpty(allParameters())) {
+      List<TypeParameterElement> allParameters = allParameters();
+      if (allParameters.isEmpty()) {
         return "";
       }
       StringBuilder alligator = new StringBuilder("<");
-      Joiner.on(", ").appendTo(alligator, allParameters());
+      joinOn(alligator, ", ", allParameters);
       return alligator.append(">").toString();
     }
 
@@ -167,13 +183,14 @@ public class CallBuilderProcessor extends AbstractProcessor {
      * The type parameters to place on the builder, with the "extends ..." bounds.
      */
     String alligatorWithBounds() {
-      if (Iterables.isEmpty(allParameters())) {
+      List<TypeParameterElement> allParameters = allParameters();
+      if (allParameters.isEmpty()) {
         return "";
       }
 
       StringBuilder alligator = new StringBuilder("<");
       String separator = "";
-      for (TypeParameterElement param : allParameters()) {
+      for (TypeParameterElement param : allParameters) {
         alligator.append(separator);
         separator = ", ";
         alligator.append(param.toString());
@@ -243,7 +260,7 @@ public class CallBuilderProcessor extends AbstractProcessor {
                 context.getBuilderFieldName(), constructorParameterName);
           }
 
-          ImmutableList<FieldInfo> fields = FieldInfo.fromAll(elementUtils, el.getParameters());
+          List<FieldInfo> fields = FieldInfo.fromAll(elementUtils, el.getParameters());
 
           for (FieldInfo field : fields) {
             if (field.style() != null) {
@@ -254,9 +271,10 @@ public class CallBuilderProcessor extends AbstractProcessor {
                     inference.builderFieldType(), field.name(),
                     qualifiedName(fieldStyle.styleClass()));
                 for (ExecutableElement modifier : fieldStyle.modifiers()) {
-                  ImmutableList<String> nonFieldParameterNames =
-                      simpleNames(Iterables.skip(modifier.getParameters(), 1));
-                  ImmutableList<String> nonFieldParameterTypes =
+                  List<? extends VariableElement> parameters = modifier.getParameters();
+                  List<String> nonFieldParameterNames =
+                      simpleNames(parameters.subList(1, parameters.size()));
+                  List<String> nonFieldParameterTypes =
                       inference.modifierParameterTypes(modifier);
                   if (nonFieldParameterTypes != null) {
                     writef(wrt, lines(
@@ -270,7 +288,7 @@ public class CallBuilderProcessor extends AbstractProcessor {
 
                         field.name(),
                         qualifiedName(fieldStyle.styleClass()), modifier.getSimpleName(),
-                        field.name(), Joiner.on(", ").join(nonFieldParameterNames));
+                        field.name(), joinOn(new StringBuilder(), ", ", nonFieldParameterNames));
                   }
                   // TODO: report warning if could not inference parameter types for some modifier.
                   // TODO: support generic type parameters on the *generated* modifier

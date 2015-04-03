@@ -14,8 +14,9 @@
 package com.google.callbuilder;
 
 import com.google.callbuilder.util.Preconditions;
-import com.google.common.collect.ImmutableSet;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,37 +27,37 @@ import java.util.Set;
  */
 public final class UniqueSymbols {
   public static final class Builder {
-    private final ImmutableSet.Builder<String> userDefined = new ImmutableSet.Builder<>();
+    private final Set<String> userDefined = new HashSet<>();
 
     public Builder addUserDefined(String name) {
       userDefined.add(name);
       return this;
     }
 
-    public Builder addAllUserDefined(Iterable<String> names) {
+    public Builder addAllUserDefined(Collection<String> names) {
       userDefined.addAll(names);
       return this;
     }
 
     public UniqueSymbols build() {
-      return new UniqueSymbols(userDefined.build());
+      return new UniqueSymbols(userDefined);
     }
   }
 
-  private final ImmutableSet<String> userDefined;
+  private final Set<String> userDefined;
 
   private final Map<String, String> cached;
   private final Set<String> used;
 
-  private UniqueSymbols(ImmutableSet<String> userDefined) {
-    this.userDefined = Preconditions.checkNotNull(userDefined);
+  private UniqueSymbols(Set<String> userDefined) {
+    this.userDefined = Collections.unmodifiableSet(new HashSet<>(userDefined));
 
     this.cached = new HashMap<>();
     this.used = new HashSet<>();
     this.used.addAll(userDefined);
   }
 
-  public ImmutableSet<String> getUserDefined() {
+  public Set<String> getUserDefined() {
     return userDefined;
   }
 

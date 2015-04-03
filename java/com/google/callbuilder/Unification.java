@@ -15,11 +15,10 @@ package com.google.callbuilder;
 
 import com.google.callbuilder.util.Preconditions;
 import com.google.callbuilder.util.ValueType;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -73,24 +72,24 @@ final class Unification {
 
   private static Sequence sequenceApply(
       Map<Variable, Unifiable> substitutions, Iterable<Unifiable> items) {
-    ImmutableList.Builder<Unifiable> newItems = new ImmutableList.Builder<>();
+    List<Unifiable> newItems = new ArrayList<>();
     for (Unifiable oldItem : items) {
       newItems.add(oldItem.apply(substitutions));
     }
-    return new Sequence(newItems.build());
+    return new Sequence(newItems);
   }
 
   /**
    * Applies s1 to the elements of s2 and adds them into a single list.
    */
-  static final ImmutableMap<Variable, Unifiable> compose(
+  static final Map<Variable, Unifiable> compose(
       Map<Variable, Unifiable> s1, Map<Variable, Unifiable> s2) {
-    ImmutableMap.Builder<Variable, Unifiable> composed = new ImmutableMap.Builder<>();
+    Map<Variable, Unifiable> composed = new HashMap<>();
     composed.putAll(s1);
     for (Map.Entry<Variable, Unifiable> entry2 : s2.entrySet()) {
       composed.put(entry2.getKey(), entry2.getValue().apply(s1));
     }
-    return composed.build();
+    return composed;
   }
 
   private static @Nullable Substitution sequenceUnify(Sequence lhs, Sequence rhs) {
@@ -108,26 +107,21 @@ final class Unification {
       Sequence restRhs = sequenceApply(subs1.resultMap(), rhs.items().subList(1, rhs.items().size()));
       Substitution subs2 = sequenceUnify(restLhs, restRhs);
       if (subs2 != null) {
-        return success(
-            new ImmutableMap.Builder<Variable, Unifiable>()
-                .putAll(subs1.resultMap())
-                .putAll(subs2.resultMap())
-                .build());
+        Map<Variable, Unifiable> joined = new HashMap<>();
+        joined.putAll(subs1.resultMap());
+        joined.putAll(subs2.resultMap());
+        return new Substitution(joined);
       }
     }
     return null;
   }
 
-  private static Substitution success(ImmutableMap<Variable, Unifiable> mapping) {
-    return new Substitution(mapping);
-  }
-
   static @Nullable Substitution unify(Unifiable lhs, Unifiable rhs) {
     if (lhs instanceof Variable) {
-      return success(ImmutableMap.<Variable, Unifiable>of((Variable) lhs, rhs));
+      return new Substitution(Collections.<Variable, Unifiable>singletonMap((Variable) lhs, rhs));
     }
     if (rhs instanceof Variable) {
-      return success(ImmutableMap.<Variable, Unifiable>of((Variable) rhs, lhs));
+      return new Substitution(Collections.<Variable, Unifiable>singletonMap((Variable) rhs, lhs));
     }
     if (lhs instanceof Atom && rhs instanceof Atom) {
       return lhs == rhs ? EMPTY : null;
@@ -144,10 +138,10 @@ final class Unification {
    * the fullest extent possible with the {@code resolve} method.
    */
   static final class Substitution extends ValueType {
-    private final ImmutableMap<Variable, Unifiable> resultMap;
+    private final Map<Variable, Unifiable> resultMap;
 
-    Substitution(ImmutableMap<Variable, Unifiable> resultMap) {
-      this.resultMap = Preconditions.checkNotNull(resultMap);
+    Substitution(Map<Variable, Unifiable> resultMap) {
+      this.resultMap = Collections.unmodifiableMap(new HashMap<>(resultMap));
     }
 
     /**
@@ -155,7 +149,7 @@ final class Unification {
      * resolved - some variable substitutions are required before getting the most atom-y
      * representation.
      */
-    ImmutableMap<Variable, Unifiable> resultMap() {
+    Map<Variable, Unifiable> resultMap() {
       return resultMap;
     }
 
@@ -176,5 +170,5 @@ final class Unification {
   }
 
   private static final Substitution EMPTY =
-      new Substitution(ImmutableMap.<Variable, Unifiable>of());
+      new Substitution(Collections.<Variable, Unifiable>emptyMap());
 }

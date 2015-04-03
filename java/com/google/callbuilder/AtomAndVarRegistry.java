@@ -16,10 +16,10 @@ package com.google.callbuilder;
 import com.google.callbuilder.Unification.Atom;
 import com.google.callbuilder.Unification.Sequence;
 import com.google.callbuilder.Unification.Unifiable;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.lang.model.element.TypeElement;
@@ -33,21 +33,26 @@ import javax.lang.model.type.TypeMirror;
  */
 final class AtomAndVarRegistry {
   /**
-   * Mapping between Atom objects and the string representation of the item in code to which they
+   * Mapping from Atom objects to the string representation of the item in code to which they
    * correspond.
    */
-  private final HashBiMap<Atom, String> atoms = HashBiMap.create();
+  private final Map<Atom, String> atomsToCode = new HashMap<>();
+
+  /**
+   * The inverse of {@link #atomsToCode}.
+   */
+  private final Map<String, Atom> codeToAtoms = new HashMap<>();
 
   String toType(Unifiable resolution) {
     if (resolution instanceof Atom) {
-      return atoms.get(resolution);
+      return atomsToCode.get(resolution);
     }
     Sequence sequence = (Sequence) resolution;
     StringBuilder typeReference = new StringBuilder()
         .append(toType(sequence.items().get(0)));
     if (sequence.items().size() > 1) {
       String prefix = "<";
-      for (Unifiable unifiable : Iterables.skip(sequence.items(), 1)) {
+      for (Unifiable unifiable : sequence.items().subList(1, sequence.items().size())) {
         typeReference.append(prefix);
         prefix = ", ";
         typeReference.append(toType(unifiable));
@@ -58,10 +63,11 @@ final class AtomAndVarRegistry {
   }
 
   private Atom atom(String codeRepresentation) {
-    Atom atom = atoms.inverse().get(codeRepresentation);
+    Atom atom = codeToAtoms.get(codeRepresentation);
     if (atom == null) {
       atom = new Atom();
-      atoms.put(atom, codeRepresentation);
+      atomsToCode.put(atom, codeRepresentation);
+      codeToAtoms.put(codeRepresentation, atom);
     }
     return atom;
   }
@@ -69,13 +75,13 @@ final class AtomAndVarRegistry {
   Unifiable encode(TypeMirror type, Map<String, ? extends Unifiable> overridenTypeVariables) {
     switch (type.getKind()) {
       case DECLARED:
-        ImmutableList.Builder<Unifiable> types = new ImmutableList.Builder<>();
+        List<Unifiable> types = new ArrayList<>();
         DeclaredType declaredType = (DeclaredType) type;
         types.add(atom(CallBuilderProcessor.qualifiedName(declaredType)));
         for (TypeMirror typeArgument : declaredType.getTypeArguments()) {
           types.add(encode(typeArgument, overridenTypeVariables));
         }
-        return new Sequence(types.build());
+        return new Sequence(types);
       case ARRAY:
       case BOOLEAN:
       case BYTE:

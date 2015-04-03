@@ -18,13 +18,18 @@ import com.google.callbuilder.Unification.Substitution;
 import com.google.callbuilder.Unification.Unifiable;
 import com.google.callbuilder.Unification.Variable;
 import com.google.callbuilder.util.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.element.VariableElement;
 
 /**
@@ -39,12 +44,12 @@ final class TypeInference {
     this.builderFieldType = Preconditions.checkNotNull(builderFieldType);
   }
 
-  private static ImmutableMap<String, Variable> overridenTypeVariables(ExecutableElement method) {
-    ImmutableMap.Builder<String, Variable> variables = new ImmutableMap.Builder<>();
+  private static Map<String, Variable> overridenTypeVariables(ExecutableElement method) {
+    Map<String, Variable> variables = new HashMap<>();
     for (TypeParameterElement typeParameter : method.getTypeParameters()) {
       variables.put(typeParameter.toString(), new Variable());
     }
-    return variables.build();
+    return variables;
   }
 
   /**
@@ -54,14 +59,14 @@ final class TypeInference {
    *     generated
    */
   static @Nullable TypeInference forField(FieldStyle fieldStyle, VariableElement parameter) {
-    ImmutableList.Builder<Unifiable> lhs = new ImmutableList.Builder<>();
-    ImmutableList.Builder<Unifiable> rhs = new ImmutableList.Builder<>();
+    List<Unifiable> lhs = new ArrayList<>();
+    List<Unifiable> rhs = new ArrayList<>();
     AtomAndVarRegistry registry = new AtomAndVarRegistry();
 
     Variable builderFieldType = new Variable();
-    ImmutableMap<String, Variable> startOverridenTypeVariables =
+    Map<String, Variable> startOverridenTypeVariables =
         overridenTypeVariables(fieldStyle.start());
-    ImmutableMap<String, Variable> finishOverridenTypeVariables =
+    Map<String, Variable> finishOverridenTypeVariables =
         overridenTypeVariables(fieldStyle.finish());
 
     // The generic type parameters of the start and finish method are actually variables in
@@ -78,17 +83,19 @@ final class TypeInference {
 
     // The parameter type of finish() must also match the type of the builder field.
     lhs.add(builderFieldType);
+    List<? extends VariableElement> finishParameters = fieldStyle.finish().getParameters();
+    // TODO: report an error if the number of elements in finishParameters is not 1.
     rhs.add(registry.encode(
-        Iterables.getOnlyElement(fieldStyle.finish().getParameters()).asType(),
+        finishParameters.get(0).asType(),
         finishOverridenTypeVariables));
 
     // The return type of finish() must match the value expected by the annotated method.
     lhs.add(registry.encode(
         fieldStyle.finish().getReturnType(),
         finishOverridenTypeVariables));
-    rhs.add(registry.encode(parameter.asType(), ImmutableMap.<String, Variable>of()));
+    rhs.add(registry.encode(parameter.asType(), Collections.<String, Variable>emptyMap()));
 
-    Substitution result = Unification.unify(new Sequence(lhs.build()), new Sequence(rhs.build()));
+    Substitution result = Unification.unify(new Sequence(lhs), new Sequence(rhs));
     if (result != null) {
       return new TypeInference(registry, result.resolve(builderFieldType));
     } else {
@@ -116,20 +123,21 @@ final class TypeInference {
    * Returns the fully-qualified types of each parameter in the <em>generated</em> modifier, or
    * {@code null} if unification failed.
    */
-  @Nullable ImmutableList<String> modifierParameterTypes(ExecutableElement modifier) {
-    ImmutableMap<String, Variable> overridenTypeVariables = overridenTypeVariables(modifier);
+  @Nullable List<String> modifierParameterTypes(ExecutableElement modifier) {
+    Map<String, Variable> overridenTypeVariables = overridenTypeVariables(modifier);
 
     Substitution result = Unification.unify(
         builderFieldType, registry.encode(modifier.getReturnType(), overridenTypeVariables));
     if (result != null) {
-      ImmutableList.Builder<String> parameterTypes = new ImmutableList.Builder<>();
-      for (VariableElement parameters : Iterables.skip(modifier.getParameters(), 1)) {
+      List<String> parameterTypes = new ArrayList<>();
+      List<? extends VariableElement> parameters = modifier.getParameters();
+      for (VariableElement parameter : parameters.subList(1, parameters.size())) {
         parameterTypes.add(
             registry.toType(
                 result.resolve(
-                    registry.encode(parameters.asType(), overridenTypeVariables))));
+                    registry.encode(parameter.asType(), overridenTypeVariables))));
       }
-      return parameterTypes.build();
+      return parameterTypes;
     }
     return null;
   }

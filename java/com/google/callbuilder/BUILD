@@ -20,7 +20,6 @@ java_library(
     deps = [
         ":annotations",
         "//java/com/google/callbuilder/util",
-        "//third_party:guava",
         "//third_party:jsr305",
     ],
     visibility = ["//visibility:public"],

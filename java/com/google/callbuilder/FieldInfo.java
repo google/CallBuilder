@@ -15,8 +15,9 @@ package com.google.callbuilder;
 
 import com.google.callbuilder.util.Preconditions;
 import com.google.callbuilder.util.ValueType;
-import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -88,12 +89,12 @@ final class FieldInfo extends ValueType {
     return new FieldInfo(parameter, style);
   }
 
-  static ImmutableList<FieldInfo> fromAll(
+  static List<FieldInfo> fromAll(
       Elements elementUtils, Iterable<? extends VariableElement> parameters) {
-    ImmutableList.Builder<FieldInfo> fields = new ImmutableList.Builder<>();
+    List<FieldInfo> fields = new ArrayList<>();
     for (VariableElement parameter : parameters) {
       fields.add(from(elementUtils, parameter));
     }
-    return fields.build();
+    return fields;
   }
 }

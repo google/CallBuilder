@@ -15,7 +15,10 @@ package com.google.callbuilder;
 
 import com.google.callbuilder.util.Preconditions;
 import com.google.callbuilder.util.ValueType;
-import com.google.common.collect.ImmutableList;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
@@ -23,14 +26,14 @@ import javax.lang.model.util.ElementFilter;
 
 final class FieldStyle extends ValueType {
   private final DeclaredType styleClass;
-  private final ImmutableList<ExecutableElement> modifiers;
+  private final List<ExecutableElement> modifiers;
   private final ExecutableElement start;
   private final ExecutableElement finish;
 
-  FieldStyle(DeclaredType styleClass, ImmutableList<ExecutableElement> modifiers,
+  FieldStyle(DeclaredType styleClass, List<ExecutableElement> modifiers,
       ExecutableElement start, ExecutableElement finish) {
     this.styleClass = Preconditions.checkNotNull(styleClass);
-    this.modifiers = Preconditions.checkNotNull(modifiers);
+    this.modifiers = Collections.unmodifiableList(new ArrayList<>(modifiers));
     this.start = Preconditions.checkNotNull(start);
     this.finish = Preconditions.checkNotNull(finish);
   }
@@ -51,7 +54,7 @@ final class FieldStyle extends ValueType {
     return styleClass;
   }
 
-  ImmutableList<ExecutableElement> modifiers() {
+  List<ExecutableElement> modifiers() {
     return modifiers;
   }
 
@@ -64,7 +67,7 @@ final class FieldStyle extends ValueType {
   }
 
   public static FieldStyle fromStyleClass(DeclaredType styleClass) {
-    ImmutableList.Builder<ExecutableElement> modifiers = new ImmutableList.Builder<>();
+    List<ExecutableElement> modifiers = new ArrayList<>();
     ExecutableElement start = null;
     ExecutableElement finish = null;
 
@@ -86,6 +89,6 @@ final class FieldStyle extends ValueType {
           styleClass));
     }
 
-    return new FieldStyle(styleClass, modifiers.build(), start, finish);
+    return new FieldStyle(styleClass, modifiers, start, finish);
   }
 }
