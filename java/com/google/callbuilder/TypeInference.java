@@ -13,16 +13,16 @@
  */
 package com.google.callbuilder;
 
-import com.google.callbuilder.Unification.Result;
 import com.google.callbuilder.Unification.Sequence;
+import com.google.callbuilder.Unification.Substitution;
 import com.google.callbuilder.Unification.Unifiable;
 import com.google.callbuilder.Unification.Variable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
+import javax.annotation.Nullable;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
@@ -53,7 +53,7 @@ final class TypeInference {
    * @param parameter the original parameter on the annotated method for which the field is being
    *     generated
    */
-  static Optional<TypeInference> forField(FieldStyle fieldStyle, VariableElement parameter) {
+  static @Nullable TypeInference forField(FieldStyle fieldStyle, VariableElement parameter) {
     ImmutableList.Builder<Unifiable> lhs = new ImmutableList.Builder<>();
     ImmutableList.Builder<Unifiable> rhs = new ImmutableList.Builder<>();
     AtomAndVarRegistry registry = new AtomAndVarRegistry();
@@ -88,11 +88,11 @@ final class TypeInference {
         finishOverridenTypeVariables));
     rhs.add(registry.encode(parameter.asType(), ImmutableMap.<String, Variable>of()));
 
-    Optional<Result> result = Unification.unify(new Sequence(lhs.build()), new Sequence(rhs.build()));
-    if (result.isPresent()) {
-      return Optional.of(new TypeInference(registry, result.get().resolve(builderFieldType)));
+    Substitution result = Unification.unify(new Sequence(lhs.build()), new Sequence(rhs.build()));
+    if (result != null) {
+      return new TypeInference(registry, result.resolve(builderFieldType));
     } else {
-      return Optional.absent();
+      return null;
     }
   }
 
@@ -105,10 +105,8 @@ final class TypeInference {
    *   <li>the type returned by the {@link BuilderField} style's {@code finish()} method
    * </ul>
    * The {@code finish()} method can perform arbitrary changes to the builder field, so this is not
-   * as simple as it first seems. For instance, the {@code finish()} method may convert an
-   * {@link Optional} to a nullable field, or vice-versa.
-   *
-   * <p>If the field type could not be determined, an {@code Optional.absent()} is returned.
+   * as simple as it first seems. For instance, the {@code finish()} method may convert a Guava
+   * {@code Optional} to a nullable field, or vice-versa.
    */
   String builderFieldType() {
     return registry.toType(builderFieldType);
@@ -116,14 +114,14 @@ final class TypeInference {
 
   /**
    * Returns the fully-qualified types of each parameter in the <em>generated</em> modifier, or
-   * {@code Optional.absent()} if unification failed.
+   * {@code null} if unification failed.
    */
-  Optional<ImmutableList<String>> modifierParameterTypes(ExecutableElement modifier) {
+  @Nullable ImmutableList<String> modifierParameterTypes(ExecutableElement modifier) {
     ImmutableMap<String, Variable> overridenTypeVariables = overridenTypeVariables(modifier);
 
-    Optional<Result> maybeResult = Unification.unify(
+    Substitution result = Unification.unify(
         builderFieldType, registry.encode(modifier.getReturnType(), overridenTypeVariables));
-    for (Result result : maybeResult.asSet()) {
+    if (result != null) {
       ImmutableList.Builder<String> parameterTypes = new ImmutableList.Builder<>();
       for (VariableElement parameters : Iterables.skip(modifier.getParameters(), 1)) {
         parameterTypes.add(
@@ -131,8 +129,8 @@ final class TypeInference {
                 result.resolve(
                     registry.encode(parameters.asType(), overridenTypeVariables))));
       }
-      return Optional.of(parameterTypes.build());
+      return parameterTypes.build();
     }
-    return Optional.absent();
+    return null;
   }
 }

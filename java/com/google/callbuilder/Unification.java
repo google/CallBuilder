@@ -14,12 +14,13 @@
 package com.google.callbuilder;
 
 import com.google.callbuilder.util.ValueType;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 /**
  * Performs symbolic unification.
@@ -89,34 +90,36 @@ final class Unification {
     return composed.build();
   }
 
-  private static Optional<Result> sequenceUnify(Sequence lhs, Sequence rhs) {
+  private static @Nullable Substitution sequenceUnify(Sequence lhs, Sequence rhs) {
     if (lhs.items().size() != rhs.items().size()) {
-      return FAIL;
+      return null;
     }
     if (lhs.items().isEmpty()) {
       return EMPTY;
     }
     Unifiable firstLhs = lhs.items().get(0);
     Unifiable firstRhs = rhs.items().get(0);
-    for (Result subs1 : unify(firstLhs, firstRhs).asSet()) {
-      Sequence restLhs = sequenceApply(subs1.rawResult(), lhs.items().subList(1, lhs.items().size()));
-      Sequence restRhs = sequenceApply(subs1.rawResult(), rhs.items().subList(1, rhs.items().size()));
-      for (Result subs2 : sequenceUnify(restLhs, restRhs).asSet()) {
+    Substitution subs1 = unify(firstLhs, firstRhs);
+    if (subs1 != null) {
+      Sequence restLhs = sequenceApply(subs1.resultMap(), lhs.items().subList(1, lhs.items().size()));
+      Sequence restRhs = sequenceApply(subs1.resultMap(), rhs.items().subList(1, rhs.items().size()));
+      Substitution subs2 = sequenceUnify(restLhs, restRhs);
+      if (subs2 != null) {
         return success(
             new ImmutableMap.Builder<Variable, Unifiable>()
-                .putAll(subs1.rawResult())
-                .putAll(subs2.rawResult())
+                .putAll(subs1.resultMap())
+                .putAll(subs2.resultMap())
                 .build());
       }
     }
-    return FAIL;
+    return null;
   }
 
-  private static Optional<Result> success(ImmutableMap<Variable, Unifiable> mapping) {
-    return Optional.<Result>of(new Result(mapping));
+  private static Substitution success(ImmutableMap<Variable, Unifiable> mapping) {
+    return new Substitution(mapping);
   }
 
-  static Optional<Result> unify(Unifiable lhs, Unifiable rhs) {
+  static @Nullable Substitution unify(Unifiable lhs, Unifiable rhs) {
     if (lhs instanceof Variable) {
       return success(ImmutableMap.<Variable, Unifiable>of((Variable) lhs, rhs));
     }
@@ -124,12 +127,12 @@ final class Unification {
       return success(ImmutableMap.<Variable, Unifiable>of((Variable) rhs, lhs));
     }
     if (lhs instanceof Atom && rhs instanceof Atom) {
-      return lhs == rhs ? EMPTY : FAIL;
+      return lhs == rhs ? EMPTY : null;
     }
     if (lhs instanceof Sequence && rhs instanceof Sequence) {
       return sequenceUnify((Sequence) lhs, (Sequence) rhs);
     }
-    return FAIL;
+    return null;
   }
 
   /**
@@ -137,11 +140,11 @@ final class Unification {
    * that resulted from the algorithm, but also supplies functionality for resolving a variable to
    * the fullest extent possible with the {@code resolve} method.
    */
-  static final class Result extends ValueType {
-    private final ImmutableMap<Variable, Unifiable> rawResult;
+  static final class Substitution extends ValueType {
+    private final ImmutableMap<Variable, Unifiable> resultMap;
 
-    Result(ImmutableMap<Variable, Unifiable> rawResult) {
-      this.rawResult = Preconditions.checkNotNull(rawResult);
+    Substitution(ImmutableMap<Variable, Unifiable> resultMap) {
+      this.resultMap = Preconditions.checkNotNull(resultMap);
     }
 
     /**
@@ -149,13 +152,13 @@ final class Unification {
      * resolved - some variable substitutions are required before getting the most atom-y
      * representation.
      */
-    ImmutableMap<Variable, Unifiable> rawResult() {
-      return rawResult;
+    ImmutableMap<Variable, Unifiable> resultMap() {
+      return resultMap;
     }
 
     @Override
     protected void addFields(FieldReceiver fields) {
-      fields.add("rawResult", rawResult);
+      fields.add("resultMap", resultMap);
     }
 
     final Unifiable resolve(Unifiable unifiable) {
@@ -163,12 +166,12 @@ final class Unification {
       Unifiable current = unifiable;
       do {
         previous = current;
-        current = current.apply(rawResult());
+        current = current.apply(resultMap());
       } while (!current.equals(previous));
       return current;
     }
   }
 
-  private static final Optional<Result> FAIL = Optional.absent();
-  private static final Optional<Result> EMPTY = success(ImmutableMap.<Variable, Unifiable>of());
+  private static final Substitution EMPTY =
+      new Substitution(ImmutableMap.<Variable, Unifiable>of());
 }

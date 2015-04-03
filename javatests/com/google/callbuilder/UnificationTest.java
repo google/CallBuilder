@@ -14,11 +14,10 @@
 package com.google.callbuilder;
 
 import com.google.callbuilder.Unification.Atom;
-import com.google.callbuilder.Unification.Result;
 import com.google.callbuilder.Unification.Sequence;
+import com.google.callbuilder.Unification.Substitution;
 import com.google.callbuilder.Unification.Unifiable;
 import com.google.callbuilder.Unification.Variable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -38,8 +37,7 @@ public class UnificationTest {
 
   @Test
   public void testTwoAtomsNotEqual() {
-    Assert.assertEquals(Optional.absent(),
-        Unification.unify(new Unification.Atom(), new Unification.Atom()));
+    Assert.assertNull(Unification.unify(new Unification.Atom(), new Unification.Atom()));
   }
 
   private Sequence seq(Unifiable... items) {
@@ -49,9 +47,9 @@ public class UnificationTest {
   @Test
   public void testVariableResolvesTransitivelyToAtom() {
     // ? Y = [a, X], X = c.
-    Result result = Unification.unify(
+    Substitution result = Unification.unify(
         seq(seq(a, x), b),
-        seq(y, x)).get();
+        seq(y, x));
     // Y = [a, b],
     // X = b.
     Assert.assertEquals(seq(a, b), result.resolve(y));
@@ -64,7 +62,7 @@ public class UnificationTest {
         ImmutableMap.of(x, b, y, a),
         Unification.unify(
             seq(a, x),
-            seq(y, b)).get().rawResult());
+            seq(y, b)).resultMap());
   }
 
   @Test
@@ -74,24 +72,20 @@ public class UnificationTest {
     // Result:
     // Y = c
     // X = b<c>
-    Result result = Unification.unify(
+    Substitution result = Unification.unify(
         seq(seq(a, x        ), y),
-        seq(seq(a, seq(b, y)), c)).get();
+        seq(seq(a, seq(b, y)), c));
     Assert.assertEquals(c, result.resolve(y));
     Assert.assertEquals(seq(b, c), result.resolve(x));
   }
 
   @Test
   public void testTrivialFailure() {
-    Assert.assertEquals(
-        Optional.absent(),
-        Unification.unify(seq(a), seq(b)));
+    Assert.assertNull(Unification.unify(seq(a), seq(b)));
   }
 
   @Test
   public void testSlighlyTrickyFailure() {
-    Assert.assertEquals(
-        Optional.absent(),
-        Unification.unify(seq(a, x, x, z), seq(y, b, z, y)));
+    Assert.assertNull(Unification.unify(seq(a, x, x, z), seq(y, b, z, y)));
   }
 }

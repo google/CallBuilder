@@ -15,9 +15,7 @@ package com.google.callbuilder;
 
 import static javax.lang.model.element.Modifier.STATIC;
 
-import com.google.callbuilder.util.ValueType;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -29,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
@@ -131,12 +130,12 @@ public class CallBuilderProcessor extends AbstractProcessor {
   private static final class TypeParameters {
     private final ImmutableList<TypeParameterElement> classParameters;
     private final ImmutableList<TypeParameterElement> methodParameters;
-    private final Optional<Context> context;
+    private final @Nullable Context context;
     private final boolean isConstructor;
 
     TypeParameters(Iterable<? extends TypeParameterElement> classParameters,
         Iterable<? extends TypeParameterElement> methodParameters,
-        Optional<Context> context,
+        @Nullable Context context,
         boolean isConstructor) {
       this.classParameters = ImmutableList.copyOf(classParameters);
       this.methodParameters = ImmutableList.copyOf(methodParameters);
@@ -145,7 +144,7 @@ public class CallBuilderProcessor extends AbstractProcessor {
     }
 
     private Iterable<TypeParameterElement> allParameters() {
-      if (context.isPresent() || isConstructor) {
+      if ((context != null) || isConstructor) {
         return Iterables.concat(classParameters, methodParameters);
       } else {
         return methodParameters;
@@ -195,9 +194,9 @@ public class CallBuilderProcessor extends AbstractProcessor {
       UniqueSymbols uniqueSymbols = new UniqueSymbols.Builder()
           .addAllUserDefined(simpleNames(el.getParameters()))
           .build();
-      Optional<Context> context = Optional.absent();
+      Context context = null;
       if (!isConstructor && !el.getModifiers().contains(STATIC)) {
-        context = Optional.of(new Context(enclosingType.asType(), uniqueSymbols.get("")));
+        context = new Context(enclosingType.asType(), uniqueSymbols.get(""));
       }
 
       TypeParameters typeParameters = new TypeParameters(
@@ -232,33 +231,34 @@ public class CallBuilderProcessor extends AbstractProcessor {
               "public final class %s%s {"),
               className, typeParameters.alligatorWithBounds());
 
-          for (Context justContext : context.asSet()) {
+          if (context != null) {
             String constructorParameterName = ann.contextName();
             writef(wrt, lines(
                 "  private final %s %s;",
                 "  public %s(%s %s) {",
                 "    %s = %s;",
                 "  }"),
-                justContext.getType(), justContext.getBuilderFieldName(),
-                className, justContext.getType(), constructorParameterName,
-                justContext.getBuilderFieldName(), constructorParameterName);
+                context.getType(), context.getBuilderFieldName(),
+                className, context.getType(), constructorParameterName,
+                context.getBuilderFieldName(), constructorParameterName);
           }
 
           ImmutableList<FieldInfo> fields = FieldInfo.fromAll(elementUtils, el.getParameters());
 
           for (FieldInfo field : fields) {
-            if (field.style().isPresent()) {
-              FieldStyle justStyle = field.style().get();
-              for (TypeInference inference :
-                  TypeInference.forField(justStyle, field.parameter()).asSet()) {
+            if (field.style() != null) {
+              FieldStyle fieldStyle = field.style();
+              TypeInference inference = TypeInference.forField(fieldStyle, field.parameter());
+              if (inference != null) {
                 writef(wrt, lines("  private %s %s = %s.start();"),
                     inference.builderFieldType(), field.name(),
-                    qualifiedName(justStyle.styleClass()));
-                for (ExecutableElement modifier : justStyle.modifiers()) {
+                    qualifiedName(fieldStyle.styleClass()));
+                for (ExecutableElement modifier : fieldStyle.modifiers()) {
                   ImmutableList<String> nonFieldParameterNames =
                       simpleNames(Iterables.skip(modifier.getParameters(), 1));
-                  for (ImmutableList<String> nonFieldParameterTypes :
-                       inference.modifierParameterTypes(modifier).asSet()) {
+                  ImmutableList<String> nonFieldParameterTypes =
+                      inference.modifierParameterTypes(modifier);
+                  if (nonFieldParameterTypes != null) {
                     writef(wrt, lines(
                             "  public %s%s %s%s(%s) {",
                             "    this.%s = %s.%s(this.%s, %s);",
@@ -269,7 +269,7 @@ public class CallBuilderProcessor extends AbstractProcessor {
                         parameterList(nonFieldParameterTypes, nonFieldParameterNames),
 
                         field.name(),
-                        qualifiedName(justStyle.styleClass()), modifier.getSimpleName(),
+                        qualifiedName(fieldStyle.styleClass()), modifier.getSimpleName(),
                         field.name(), Joiner.on(", ").join(nonFieldParameterNames));
                   }
                   // TODO: report warning if could not inference parameter types for some modifier.
@@ -308,8 +308,8 @@ public class CallBuilderProcessor extends AbstractProcessor {
                 typeParameters.alligator());
           } else {
             invocation = String.format("%s.%s",
-                context.isPresent()
-                    ? context.get().getBuilderFieldName()
+                (context != null)
+                    ? context.getBuilderFieldName()
                     : enclosingType.getQualifiedName(),
                 el.getSimpleName());
           }
@@ -365,9 +365,9 @@ public class CallBuilderProcessor extends AbstractProcessor {
       if (invocations.length() != 0) {
         invocations.append(", ");
       }
-      if (field.style().isPresent()) {
+      if (field.style() != null) {
         invocations.append(String.format("%s.finish(%s)",
-            qualifiedName(field.style().get().styleClass()), field.name()));
+            qualifiedName(field.style().styleClass()), field.name()));
       } else {
         invocations.append(field.name());
       }

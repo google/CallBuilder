@@ -14,12 +14,12 @@
 package com.google.callbuilder;
 
 import com.google.callbuilder.util.ValueType;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
@@ -29,11 +29,11 @@ import javax.lang.model.util.Elements;
 
 final class FieldInfo extends ValueType {
   private final VariableElement parameter;
-  private final Optional<FieldStyle> style;
+  private final @Nullable FieldStyle style;
 
-  FieldInfo(VariableElement parameter, Optional<FieldStyle> style) {
+  FieldInfo(VariableElement parameter, @Nullable FieldStyle style) {
     this.parameter = Preconditions.checkNotNull(parameter);
-    this.style = Preconditions.checkNotNull(style);
+    this.style = style;
   }
 
   @Override
@@ -49,7 +49,7 @@ final class FieldInfo extends ValueType {
     return parameter;
   }
 
-  Optional<FieldStyle> style() {
+   @Nullable FieldStyle style() {
     return style;
   }
 
@@ -69,7 +69,7 @@ final class FieldInfo extends ValueType {
   }
 
   static FieldInfo from(Elements elementUtils, VariableElement parameter) {
-    Optional<FieldStyle> style = Optional.absent();
+    FieldStyle style = null;
 
     // Look for style field on the @BuilderField annotation. If the annotation is
     // present, the value of that field overrides the default set above.
@@ -79,8 +79,7 @@ final class FieldInfo extends ValueType {
         for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> annEl :
              ann.getElementValues().entrySet()) {
           if ("style".equals(annEl.getKey().getSimpleName().toString())) {
-            style = Optional.of(
-                FieldStyle.fromStyleClass((DeclaredType) annEl.getValue().getValue()));
+            style = FieldStyle.fromStyleClass((DeclaredType) annEl.getValue().getValue());
           }
         }
       }
