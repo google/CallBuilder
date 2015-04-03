@@ -44,3 +44,21 @@ java_plugin(
         ":processor_lib",
     ],
 )
+
+# The next two rules comprise a hack to create a deploy jar for the CallBuilder
+# processor.
+# You can build the deploy jar by executing
+# bazel build //java/com/google/callbuilder:CallBuilderProcessor.jar
+
+java_binary(
+    name = "CallBuilderBinary",
+    srcs = ["CallBuilderBinary.java"],
+    deps = [":processor_lib", ":annotations"],
+)
+
+genrule(
+    name = "generate_processor_jar",
+    srcs = [":CallBuilderBinary_deploy.jar"],
+    outs = ["CallBuilderProcessor.jar"],
+    cmd = "mkdir -p META-INF/services && echo com.google.callbuilder.CallBuilderProcessor > META-INF/services/javax.annotation.processing.Processor && cp $< $@ && chmod +w $@ && zip -g $@ META-INF/services/javax.annotation.processing.Processor",
+)
