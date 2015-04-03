@@ -24,8 +24,8 @@ public class Person {
   Person(
       String familyName,
       String givenName,
-      ImmutableList<String> addressLines,
-      Optional<Integer> age) {
+      List<String> addressLines,
+      @Nullable Integer age) {
     // ...
   }
 }
@@ -35,8 +35,8 @@ Now you will have access to a `PersonBuilder` class in the same package!
 
 ```java
 Person friend = new PersonBuilder()
-    .setAddressLines(ImmutableList.of("1123 Easy Street", "Townplace, XZ"))
-    .setAge(Optional.of(22))
+    .setAddressLines(Arrays.asList("1123 Easy Street", "Townplace, XZ"))
+    .setAge(22)
     .setGivenName("John")
     .setFamilyName("Doe")
     .build();
@@ -52,8 +52,8 @@ public class Person {
   Person(
       String familyName,
       String givenName,
-      @BuilderField(style = ImmutableListAdding.class) ImmutableList<String> addressLines,
-      @BuilderField(style = OptionalSetting.class) Optional<Integer> age) {
+      @BuilderField(style = ArrayListAdding.class) ArrayList<String> addressLines,
+      @Nullable Integer age) {
     // ...
   }
 }
@@ -83,6 +83,9 @@ in the `deps` attribute:
 java_library(
     name = "person",
     srcs = ["Person.java"],
-    deps = ["//java/com/google/callbuilder"],
+    deps = [
+        "//java/com/google/callbuilder",
+        "//java/com/google/callbuilder/style",
+    ],
 )
 ```
