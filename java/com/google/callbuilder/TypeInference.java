@@ -17,7 +17,7 @@ import com.google.callbuilder.Unification.Sequence;
 import com.google.callbuilder.Unification.Substitution;
 import com.google.callbuilder.Unification.Unifiable;
 import com.google.callbuilder.Unification.Variable;
-import com.google.common.base.Preconditions;
+import com.google.callbuilder.util.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;

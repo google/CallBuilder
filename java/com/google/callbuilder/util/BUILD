@@ -14,6 +14,6 @@
 
 java_library(
     name = "util",
-    srcs = ["ValueType.java"],
+    srcs = glob(["*.java"]),
     visibility = ["//visibility:public"],
 )

@@ -19,7 +19,7 @@ java_test(
     srcs = ["CallBuilderTest.java"],
     deps = [
         "//java/com/google/callbuilder",
-        "//third_party:guava",
+        "//java/com/google/callbuilder/util",
         "//third_party:junit4",
     ],
 )
@@ -31,7 +31,6 @@ java_test(
     deps = [
         "//java/com/google/callbuilder",
         "//java/com/google/callbuilder/style",
-        "//third_party:guava",
         "//third_party:junit4",
     ],
 )
@@ -41,7 +40,6 @@ java_test(
     srcs = ["UnificationTest.java"],
     deps = [
         "//java/com/google/callbuilder:processor_lib",
-        "//third_party:guava",
         "//third_party:junit4",
     ],
 )

@@ -13,10 +13,7 @@
  */
 package com.google.callbuilder;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
+import com.google.callbuilder.util.Preconditions;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,6 +22,8 @@ import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +49,7 @@ public class CallBuilderTest {
 
     @CallBuilder
     static Map<String, String> singletonMap(String key, String value) {
-      return ImmutableMap.of(key, value);
+      return Collections.singletonMap(key, value);
     }
   }
 
@@ -74,9 +73,9 @@ public class CallBuilderTest {
       return second;
     }
 
-    @CallBuilder(className = "ThreeInIterableBuilder")
-    <F extends E> Iterable<E> toIterable(F first, F second, F third) {
-      return ImmutableList.<E>of(first, second, third);
+    @CallBuilder(className = "ThreeInListBuilder")
+    <F extends E> List<E> toList(F first, F second, F third) {
+      return Arrays.asList(first, second, third);
     }
 
     @CallBuilder(className = "CopyAppender", methodName = "append")
@@ -131,7 +130,9 @@ public class CallBuilderTest {
 
   @Test
   public void genericsInParameters() {
-    ImmutableMap<String, Integer> map = ImmutableMap.of("foo", 999, "bar", 1000);
+    Map<String, Integer> map = new HashMap<>();
+    map.put("foo", 999);
+    map.put("bar", 1000);
     Assert.assertEquals(false, new HasGenericsContainsCheck()
         .setMap(map)
         .setKey("foo")
@@ -146,7 +147,7 @@ public class CallBuilderTest {
 
   @Test
   public void returnIsGeneric() {
-    Assert.assertEquals(ImmutableMap.of("a", "b"),
+    Assert.assertEquals(Collections.singletonMap("a", "b"),
         new SingletonMapBuilder().setKey("a").setValue("b").build());
   }
 
@@ -165,9 +166,9 @@ public class CallBuilderTest {
     HasGen<Map<String, String>> hasGen = new HasGen<>();
     hasGen.which = 1;
     Assert.assertEquals(
-        ImmutableMap.of("a", "b"),
+        Collections.singletonMap("a", "b"),
         new PickSomeBuilder<Map<String, String>>(hasGen)
-            .setSecond(ImmutableMap.of("a", "b"))
+            .setSecond(Collections.singletonMap("a", "b"))
             .build());
   }
 
@@ -178,21 +179,21 @@ public class CallBuilderTest {
     ArrayList<Integer> second = new ArrayList<>();
     ArrayList<Integer> third = new ArrayList<>();
 
-    Iterable<List<Integer>> result =
-        new ThreeInIterableBuilder<List<Integer>, ArrayList<Integer>>(hasGen)
+    List<List<Integer>> result =
+        new ThreeInListBuilder<List<Integer>, ArrayList<Integer>>(hasGen)
             .setFirst(first)
             .setSecond(second)
             .setThird(third)
             .build();
-    Assert.assertSame(first, Iterables.get(result, 0));
-    Assert.assertSame(second, Iterables.get(result, 1));
-    Assert.assertSame(third, Iterables.get(result, 2));
+    Assert.assertSame(first, result.get(0));
+    Assert.assertSame(second, result.get(1));
+    Assert.assertSame(third, result.get(2));
   }
 
   @Test
   public void genericArgsOnMethodAndContainingClassButMethodIsStatic() {
     List<Integer> numbers = new CopyAppender<Integer>()
-        .setAllButLast(ImmutableList.of(1, 2))
+        .setAllButLast(Arrays.asList(1, 2))
         .setLast(3)
         .append();
 

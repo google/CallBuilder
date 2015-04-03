@@ -13,8 +13,8 @@
  */
 package com.google.callbuilder;
 
+import com.google.callbuilder.util.Preconditions;
 import com.google.callbuilder.util.ValueType;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Map;

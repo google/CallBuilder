@@ -13,11 +13,14 @@
  */
 package com.google.callbuilder;
 
+import com.google.callbuilder.util.Preconditions;
 import com.google.callbuilder.util.ValueType;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -47,13 +50,13 @@ final class Unification {
   }
 
   static final class Sequence extends ValueType implements Unifiable {
-    private final ImmutableList<Unifiable> items;
+    private final List<Unifiable> items;
 
-    Sequence(ImmutableList<Unifiable> items) {
-      this.items = Preconditions.checkNotNull(items);
+    Sequence(List<Unifiable> items) {
+      this.items = Collections.unmodifiableList(new ArrayList<Unifiable>(items));
     }
 
-    ImmutableList<Unifiable> items() {
+    List<Unifiable> items() {
       return items;
     }
 

@@ -18,13 +18,15 @@ import com.google.callbuilder.Unification.Sequence;
 import com.google.callbuilder.Unification.Substitution;
 import com.google.callbuilder.Unification.Unifiable;
 import com.google.callbuilder.Unification.Variable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @RunWith(JUnit4.class)
 public class UnificationTest {
@@ -41,7 +43,7 @@ public class UnificationTest {
   }
 
   private Sequence seq(Unifiable... items) {
-    return new Sequence(ImmutableList.copyOf(items));
+    return new Sequence(Arrays.asList(items));
   }
 
   @Test
@@ -58,8 +60,11 @@ public class UnificationTest {
 
   @Test
   public void testSimpleAssignmentAcrossSequence() {
+    Map<Variable, Unifiable> expected = new HashMap<>();
+    expected.put(x, b);
+    expected.put(y, a);
     Assert.assertEquals(
-        ImmutableMap.of(x, b, y, a),
+        expected,
         Unification.unify(
             seq(a, x),
             seq(y, b)).resultMap());
