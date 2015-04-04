@@ -71,21 +71,5 @@ Person friend = new PersonBuilder()
     .build();
 ```
 
-#How to use
-For the time being, CallBuilder requires you to use the
-[Bazel](http://bazel.io/) build system for your project.
-
-Copy the files in the CallBuilder repository to your workspace. Then, in your
-`java_library` or `java_binary` target, simply add a dependency on CallBuilder
-in the `deps` attribute:
-
-```python
-java_library(
-    name = "person",
-    srcs = ["Person.java"],
-    deps = [
-        "//java/com/google/callbuilder",
-        "//java/com/google/callbuilder/style",
-    ],
-)
-```
+#Project setup
+Instructions are on the [wiki](https://github.com/google/CallBuilder/wiki/Project-setup-(users))
