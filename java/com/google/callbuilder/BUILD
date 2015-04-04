@@ -53,7 +53,11 @@ java_plugin(
 java_binary(
     name = "CallBuilderBinary",
     srcs = ["CallBuilderBinary.java"],
-    deps = [":processor_lib", ":annotations"],
+    deps = [
+        ":processor_lib",
+        ":annotations",
+        "//java/com/google/callbuilder/style",
+    ],
 )
 
 genrule(
