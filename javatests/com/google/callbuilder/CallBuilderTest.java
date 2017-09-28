@@ -14,18 +14,17 @@
 package com.google.callbuilder;
 
 import com.google.callbuilder.util.Preconditions;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class CallBuilderTest {
@@ -213,5 +212,10 @@ public class CallBuilderTest {
     Name n = new NameBuilder().setGiven("Eric").setFamily("Schmidt").build();
     Assert.assertEquals("Eric", n.given);
     Assert.assertEquals("Schmidt", n.family);
+  }
+
+  @Test
+  public void buildMethodIsPublic() throws Exception {
+    Assert.assertEquals(Modifier.PUBLIC, NameBuilder.class.getMethod("build").getModifiers() & Modifier.PUBLIC);
   }
 }

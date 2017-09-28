@@ -333,7 +333,7 @@ public class CallBuilderProcessor extends AbstractProcessor {
           }
 
           writef(wrt, lines(
-              "  %s %s() {",
+              "  public %s %s() {",
               "    %s%s(%s);",
               "  }",
               "}"),
