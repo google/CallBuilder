@@ -245,6 +245,9 @@ public class CallBuilderProcessor extends AbstractProcessor {
           }
 
           writef(wrt, lines(
+              "@javax.annotation.Generated(\"%s\")"),
+              CallBuilderProcessor.class.getName());
+          writef(wrt, lines(
               "public final class %s%s {"),
               className, typeParameters.alligatorWithBounds());
 
