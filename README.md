@@ -1,4 +1,4 @@
-#CallBuilder
+# CallBuilder
 Make a builder by defining one function.  
 (_beta_: be ready for breaking API changes)
 
@@ -70,6 +70,3 @@ Person friend = new PersonBuilder()
     .setFamilyName("Doe")
     .build();
 ```
-
-#Project setup
-Instructions are on the [wiki](https://github.com/google/CallBuilder/wiki/Project-setup-(users))
